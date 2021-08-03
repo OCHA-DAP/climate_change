@@ -28,9 +28,9 @@
       <label for="radio3">CO2 emissions total</label>
     </div>
     <div class="itemWrapper" id="legendWrapper">
-      <div class="item" id="low">27(worse)</div>
+      <div class="item" id="low">worse</div>
       <img class="item" id="legend" src="./img/legend1.png" />
-      <div class="item" id="high">77(better)</div>
+      <div class="item" id="high">better</div>
       <img class="item" id="legend2" src="./img/legend3.png" />
       <div class="item" id="na">no data</div>
     </div>
@@ -86,8 +86,8 @@
       map = new mapboxgl.Map({
         container: 'map', // container element id
         style: 'mapbox://styles/jhjanicki/ckrukpn7t13zy18o82tq8o7wp',
-        center: [21.063148, 3.496558], // initial map center in [lon, lat]
-        zoom: 1,
+        center: [9.168248, 11.987638], // initial map center in [lon, lat]
+        zoom: 2,
         minZoom: 1
       });
 
@@ -96,7 +96,7 @@
       map = new mapboxgl.Map({
         container: 'map', // container element id
         style: 'mapbox://styles/jhjanicki/ckrukpn7t13zy18o82tq8o7wp',
-        center: [21.063148, 3.496558], // initial map center in [lon, lat]
+        center: [9.168248, 11.987638], // initial map center in [lon, lat]
         zoom: 3,
         minZoom: 2
       });
@@ -120,6 +120,8 @@
             'interpolate',
             ['linear'],
             ['get', 'NDgain'],
+            0,
+            "#888888",
             10,
             '#49010d',
             20,
@@ -152,7 +154,23 @@
         'paint': {
           'line-color': 'black',
           'line-opacity': 1,
-          'line-width': 0.5
+          'line-width':
+            [
+              "case",
+              ["==", ["get", "ROMNAM"], 'Burkina Faso'],
+              3,
+              ["==", ["get", "ROMNAM"], 'Chad'],
+              3,
+              ["==", ["get", "ROMNAM"], 'Cameroon'],
+              3,
+              ["==", ["get", "ROMNAM"], 'Mali'],
+              3,
+              ["==", ["get", "ROMNAM"], 'Niger'],
+              3,
+              ["==", ["get", "ROMNAM"], 'Nigeria'],
+              3,
+              0.5
+            ]
         }
       }, 'settlement-subdivision-label');
     }
@@ -186,14 +204,29 @@
 
         countries.features.forEach(function (country) {
           if (country.properties.ISO3CD == row.Code) {
-            country.properties.CO2PerCapita2018 = row.CO2PerCapita2018;
+            if (row.CO2PerCapita2018 == "") {
+              country.properties.CO2PerCapita2018 = 0;
+            } else {
+              country.properties.CO2PerCapita2018 = row.CO2PerCapita2018;
+            }
+
+            if (row.CO2Total2018 == "") {
+              country.properties.CO2Total2018 = 0;
+            } else {
+              country.properties.CO2Total2018 = row.CO2Total2018;
+            }
+
+            if (row.NDgain == "") {
+              country.properties.NDgain = 0;
+            } else {
+              country.properties.NDgain = row.NDgain;
+            }
+
             country.properties.rankPerCapital = row.rankPerCapital;
             country.properties.population2018 = row.population2018;
-            country.properties.CO2Total2018 = row.CO2Total2018;
             country.properties.rankTotal = row.rankTotal;
             country.properties.latitude = row.latitude;
             country.properties.longitude = row.longitude;
-            country.properties.NDgain = row.NDgain;
             country.properties.rankND = row.rankND;
             country.properties.income = row.income;
           }
@@ -206,8 +239,8 @@
       $('input[type=radio]').change(function () {
         if (this.value == 'vulnerability') {
           $("#legend").attr('src', "./img/legend1.png");
-          $("#low").html("27 (worse)");
-          $("#high").html("77 (better)");
+          $("#low").html("worse");
+          $("#high").html("better");
           map.setPaintProperty('countriesfill',
             'fill-color', [
             'interpolate',
@@ -314,7 +347,6 @@
 
       map.on('click', 'countriesfill', function (e) {
 
-
         map.getCanvas().style.cursor = 'pointer';
 
 
@@ -356,20 +388,27 @@
         }
 
 
-        popup = new mapboxgl.Popup({
-          closeButton: true,
-          closeOnClick: true,
-          className: popupClass
-        })
-          .setHTML(`<h3 class="popupClass"><b>${country}</b></h3><h4><b>Climate readiness & vulnerability (ND-Gain Index)</b>: ${NDgain} ${rankND}<br><b>CO2 per capita</b>: ${CO2PerCapita2018} metric tons per capita ${rankPerCapital}<br><b>Total CO2 emissions</b>: ${CO2Total2018} metric tons ${rankTotal}</h4>`)
-          .setLngLat([longitude, latitude])
-          .addTo(map);
+        if (country == "Taiwan" || country == "Western Sahara" || country == "Jammu and Kashmir" || country == "Aksai Chin" || country == "Abyei" || country == "French Guiana" || country == "Puerto Rico (USA)" || country == "Arunachal Pradesh" || country == "French Southern Territories" || country == "New Caledonia" || country == "Antarctica" || country == "Greenland" || country == "Svalbard and Jan Mayen Islands" || country == "South Georgia and the South Sandwich Islands" || country == "Falkland Islands (Malvinas)" || country == "") {
+        } else {
+          popup = new mapboxgl.Popup({
+            closeButton: true,
+            closeOnClick: true,
+            className: popupClass
+          })
+            .setHTML(`<h3 class="popupClass"><b>${country}</b></h3><h4><b>Climate readiness & vulnerability (ND-Gain Index)</b>: ${NDgain} ${rankND}<br><b>CO2 per capita</b>: ${CO2PerCapita2018} metric tons per capita ${rankPerCapital}<br><b>Total CO2 emissions</b>: ${CO2Total2018} metric tons ${rankTotal}</h4>`)
+            .setLngLat([longitude, latitude])
+            .addTo(map);
+
+        }
+
+
 
       });
 
       //mobile
 
-      map.on('touchstart', 'plants', function (e) {
+      map.on('touchstart', 'countriesfill', function (e) {
+
 
         map.getCanvas().style.cursor = 'pointer';
         var country = e.features[0].properties.ROMNAM;
@@ -382,7 +421,6 @@
         var NDgain = e.features[0].properties.NDgain;
         var rankND = e.features[0].properties.rankND;
         var income = e.features[0].properties.income;
-
 
         var popupClass = "color1";
 
@@ -410,14 +448,20 @@
         }
 
 
-        popup = new mapboxgl.Popup({
-          closeButton: true,
-          closeOnClick: true,
-          className: popupClass
-        })
-          .setHTML(`<h3 class="popupClass"><b>${country}</b></h3><h4><b>Climate vulnerability</b>: ${NDgain} ${rankND}<br><b>CO2 per capita</b>: ${CO2PerCapita2018} metric tons per capita ${rankPerCapital}<br><b>Total CO2 emissions</b>: ${CO2Total2018} metric tons ${rankTotal}</h4>`)
-          .setLngLat([longitude, latitude])
-          .addTo(map);
+
+        if (country == "Taiwan" || country == "Western Sahara" || country == "Jammu and Kashmir" || country == "Aksai Chin" || country == "Abyei" || country == "French Guiana" || country == "Puerto Rico (USA)" || country == "Arunachal Pradesh" || country == "French Southern Territories" || country == "New Caledonia" || country == "Antarctica" || country == "Greenland" || country == "Svalbard and Jan Mayen Islands" || country == "South Georgia and the South Sandwich Islands" || country == "Falkland Islands (Malvinas)" || country == "") {
+        } else {
+          popup = new mapboxgl.Popup({
+            closeButton: true,
+            closeOnClick: true,
+            className: popupClass
+          })
+            .setHTML(`<h3 class="popupClass"><b>${country}</b></h3><h4><b>Climate readiness & vulnerability (ND-Gain Index)</b>: ${NDgain} ${rankND}<br><b>CO2 per capita</b>: ${CO2PerCapita2018} metric tons per capita ${rankPerCapital}<br><b>Total CO2 emissions</b>: ${CO2Total2018} metric tons ${rankTotal}</h4>`)
+            .setLngLat([longitude, latitude])
+            .addTo(map);
+
+        }
+
 
       });
     }
