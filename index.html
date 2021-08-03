@@ -1,0 +1,430 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+  <title>Climate change map</title>
+  <link href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css' rel='stylesheet' type='text/css'>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600;1,700&display=swap"
+    rel="stylesheet">
+  <script src='https://api.mapbox.com/mapbox-gl-js/v1.6.0/mapbox-gl.js'></script>
+  <link href='https://api.mapbox.com/mapbox-gl-js/v1.6.0/mapbox-gl.css' rel='stylesheet' />
+  <link href="./style.css" rel="stylesheet">
+</head>
+
+<body>
+  <div id='map'></div>
+  <div id='logo'>
+  </div>
+  <div id='console'>
+    <div class="switch-field">
+      <input type="radio" id="radio1" name="switch" value="vulnerability" checked />
+      <label for="radio1">Climate readiness & vulnerability</label>
+      <input type="radio" id="radio2" name="switch" value="emissions" />
+      <label for="radio2">CO2 emissions per capita</label>
+      <input type="radio" id="radio3" name="switch" value="emissions2" />
+      <label for="radio3">CO2 emissions total</label>
+    </div>
+    <div class="itemWrapper" id="legendWrapper">
+      <div class="item" id="low">27(worse)</div>
+      <img class="item" id="legend" src="./img/legend1.png" />
+      <div class="item" id="high">77(better)</div>
+      <img class="item" id="legend2" src="./img/legend3.png" />
+      <div class="item" id="na">no data</div>
+    </div>
+  </div>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+  <script src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js'></script>
+  <script src='./data/countries.js'></script>
+  <script src='./data/data.js'></script>
+
+  <script>
+
+    //******************
+    // Responsive setup
+    //******************
+    var windowWidth = $(window).width();
+    var windowHeight = $(window).height();
+    var viewportWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+    var viewportHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+
+    var mobile = false;
+
+    $(window).resize(function () {
+      if (windowWidth != $(window).width() || windowHeight != $(window).height()) {
+        location.reload();
+        return;
+      }
+    });
+
+    if (/Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+      mobile = true;
+    }
+
+
+    //**********
+    // Map setup
+    //**********
+
+    mapboxgl.accessToken = 'pk.eyJ1IjoiamhqYW5pY2tpIiwiYSI6Il9vb1ZlWnMifQ.zJie3Sr8zh3h5rR8IBMB2A';
+
+    var map;
+    var popup;
+
+    // status
+    var geoJsonData = {
+      'type': 'FeatureCollection',
+      'features': []
+    };
+
+
+    if (mobile) {
+
+      map = new mapboxgl.Map({
+        container: 'map', // container element id
+        style: 'mapbox://styles/jhjanicki/ckrukpn7t13zy18o82tq8o7wp',
+        center: [21.063148, 3.496558], // initial map center in [lon, lat]
+        zoom: 1,
+        minZoom: 1
+      });
+
+    } else {
+
+      map = new mapboxgl.Map({
+        container: 'map', // container element id
+        style: 'mapbox://styles/jhjanicki/ckrukpn7t13zy18o82tq8o7wp',
+        center: [21.063148, 3.496558], // initial map center in [lon, lat]
+        zoom: 3,
+        minZoom: 2
+      });
+
+    }
+
+
+    function addCountryLayer() {
+
+      map.addSource('countries', {
+        type: 'geojson',
+        data: countries
+      });
+
+      map.addLayer({
+        'id': 'countriesfill',
+        'type': 'fill',
+        'source': 'countries',
+        'paint': {
+          'fill-color': [
+            'interpolate',
+            ['linear'],
+            ['get', 'NDgain'],
+            10,
+            '#49010d',
+            20,
+            '#67000d',
+            30,
+            '#a50f15',
+            40,
+            '#cb181d',
+            50,
+            '#ef3b2c',
+            60,
+            '#fb6a4a',
+            70,
+            '#fc9272',
+            80,
+            '#fcbba1',
+            90,
+            '#fee0d2',
+            100,
+            '#fff5f0'
+          ],
+          'fill-opacity': 0.8
+        }
+      }, 'settlement-subdivision-label');
+
+      map.addLayer({
+        'id': 'countriesline',
+        'type': 'line',
+        'source': 'countries',
+        'paint': {
+          'line-color': 'black',
+          'line-opacity': 1,
+          'line-width': 0.5
+        }
+      }, 'settlement-subdivision-label');
+    }
+
+    map.on('load', function () {
+
+      init();
+
+      var layers = map.getStyle().layers;
+      addCountryLayer();
+
+    });
+
+    if (!mobile) {
+      map.addControl(new mapboxgl.NavigationControl());
+    }
+
+
+
+    //**********
+    // Read data
+    //**********
+
+
+
+    function init() {
+
+      $('#loading').hide();
+
+      data.forEach(function (row) {
+
+        countries.features.forEach(function (country) {
+          if (country.properties.ISO3CD == row.Code) {
+            country.properties.CO2PerCapita2018 = row.CO2PerCapita2018;
+            country.properties.rankPerCapital = row.rankPerCapital;
+            country.properties.population2018 = row.population2018;
+            country.properties.CO2Total2018 = row.CO2Total2018;
+            country.properties.rankTotal = row.rankTotal;
+            country.properties.latitude = row.latitude;
+            country.properties.longitude = row.longitude;
+            country.properties.NDgain = row.NDgain;
+            country.properties.rankND = row.rankND;
+            country.properties.income = row.income;
+          }
+
+        })
+
+      });
+
+
+      $('input[type=radio]').change(function () {
+        if (this.value == 'vulnerability') {
+          $("#legend").attr('src', "./img/legend1.png");
+          $("#low").html("27 (worse)");
+          $("#high").html("77 (better)");
+          map.setPaintProperty('countriesfill',
+            'fill-color', [
+            'interpolate',
+            ['linear'],
+            ['get', 'NDgain'],
+            25,
+            '#49010d',
+            30,
+            '#67000d',
+            35,
+            '#a50f15',
+            40,
+            '#cb181d',
+            45,
+            '#ef3b2c',
+            50,
+            '#fb6a4a',
+            55,
+            '#fc9272',
+            60,
+            '#fcbba1',
+            65,
+            '#fee0d2',
+            70,
+            '#fff5f0',
+            75,
+            '#e4e4e4',
+          ])
+        } else if (this.value == 'emissions') {
+          $("#legend").attr('src', "./img/legend2.png");
+          $("#low").html("0.02");
+          $("#high").html("32 metric tons per capita");
+          map.setPaintProperty('countriesfill',
+            'fill-color', [
+            'interpolate',
+            ["linear"],
+            ['get', 'CO2PerCapita2018'],
+            0,
+            '#e4e4e4',
+            0.05,
+            '#fff5f0',
+            0.1,
+            '#fee0d2',
+            0.2,
+            '#fcbba1',
+            0.5,
+            '#fc9272',
+            1,
+            '#fb6a4a',
+            3,
+            '#ef3b2c',
+            5,
+            '#cb181d',
+            10,
+            '#a50f15',
+            20,
+            '#67000d',
+            30,
+            '#49010d'
+          ])
+        } else {
+          $("#legend").attr('src', "./img/legend2.png");
+          $("#low").html("10000");
+          $("#high").html("10.3 billion metric tons");
+          map.setPaintProperty('countriesfill',
+            'fill-color', [
+            'interpolate',
+            ["linear"],
+            ['get', 'CO2Total2018'],
+            0,
+            '#e4e4e4',
+            10000,
+            '#fff5f0',
+            500000,
+            '#fee0d2',
+            1000000,
+            '#fcbba1',
+            5000000,
+            '#fc9272',
+            10000000,
+            '#fb6a4a',
+            50000000,
+            '#ef3b2c',
+            100000000,
+            '#cb181d',
+            500000000,
+            '#a50f15',
+            1000000000,
+            '#67000d',
+            10000000000,
+            '#49010d'
+          ])
+
+        }
+      });
+
+
+
+
+      map.on('mouseleave', function () {
+        map.getCanvas().style.cursor = '';
+      });
+
+
+      map.on('click', 'countriesfill', function (e) {
+
+
+        map.getCanvas().style.cursor = 'pointer';
+
+
+        var country = e.features[0].properties.ROMNAM;
+        var latitude = e.features[0].properties.latitude;
+        var longitude = e.features[0].properties.longitude;
+        var CO2PerCapita2018 = e.features[0].properties.CO2PerCapita2018;
+        var rankPerCapital = e.features[0].properties.rankPerCapital;
+        var CO2Total2018 = e.features[0].properties.CO2Total2018;
+        var rankTotal = e.features[0].properties.rankTotal;
+        var NDgain = e.features[0].properties.NDgain;
+        var rankND = e.features[0].properties.rankND;
+        var income = e.features[0].properties.income;
+
+
+        var popupClass = "color1";
+
+        if (NDgain == 0 || NDgain == "") {
+          NDgain = "NA";
+          rankND = "";
+        } else {
+          rankND = `(Rank ${rankND})`;
+        }
+
+        if (CO2Total2018 == 0 || CO2PerCapita2018 == "") {
+          CO2Total2018 = "NA";
+          rankTotal = "";
+        } else {
+          CO2Total2018 = Math.round(CO2Total2018 * 10) / 10;
+          rankTotal = `(Rank ${rankTotal})`;
+        }
+
+        if (CO2PerCapita2018 == 0 || CO2PerCapita2018 == "") {
+          CO2PerCapita2018 = "NA";
+          rankPerCapital = "";
+        } else {
+          CO2PerCapita2018 = Math.round(CO2PerCapita2018 * 100) / 100;
+          rankPerCapital = `(Rank ${rankPerCapital})`;
+        }
+
+
+        popup = new mapboxgl.Popup({
+          closeButton: true,
+          closeOnClick: true,
+          className: popupClass
+        })
+          .setHTML(`<h3 class="popupClass"><b>${country}</b></h3><h4><b>Climate readiness & vulnerability (ND-Gain Index)</b>: ${NDgain} ${rankND}<br><b>CO2 per capita</b>: ${CO2PerCapita2018} metric tons per capita ${rankPerCapital}<br><b>Total CO2 emissions</b>: ${CO2Total2018} metric tons ${rankTotal}</h4>`)
+          .setLngLat([longitude, latitude])
+          .addTo(map);
+
+      });
+
+      //mobile
+
+      map.on('touchstart', 'plants', function (e) {
+
+        map.getCanvas().style.cursor = 'pointer';
+        var country = e.features[0].properties.ROMNAM;
+        var latitude = e.features[0].properties.latitude;
+        var longitude = e.features[0].properties.longitude;
+        var CO2PerCapita2018 = e.features[0].properties.CO2PerCapita2018;
+        var rankPerCapital = e.features[0].properties.rankPerCapital;
+        var CO2Total2018 = e.features[0].properties.CO2Total2018;
+        var rankTotal = e.features[0].properties.rankTotal;
+        var NDgain = e.features[0].properties.NDgain;
+        var rankND = e.features[0].properties.rankND;
+        var income = e.features[0].properties.income;
+
+
+        var popupClass = "color1";
+
+        if (NDgain == 0 || NDgain == "") {
+          NDgain = "NA";
+          rankND = "";
+        } else {
+          rankND = `(Rank ${rankND})`;
+        }
+
+        if (CO2Total2018 == 0 || CO2PerCapita2018 == "") {
+          CO2Total2018 = "NA";
+          rankTotal = "";
+        } else {
+          CO2Total2018 = Math.round(CO2Total2018 * 10) / 10;
+          rankTotal = `(Rank ${rankTotal})`;
+        }
+
+        if (CO2PerCapita2018 == 0 || CO2PerCapita2018 == "") {
+          CO2PerCapita2018 = "NA";
+          rankPerCapital = "";
+        } else {
+          CO2PerCapita2018 = Math.round(CO2PerCapita2018 * 100) / 100;
+          rankPerCapital = `(Rank ${rankPerCapital})`;
+        }
+
+
+        popup = new mapboxgl.Popup({
+          closeButton: true,
+          closeOnClick: true,
+          className: popupClass
+        })
+          .setHTML(`<h3 class="popupClass"><b>${country}</b></h3><h4><b>Climate vulnerability</b>: ${NDgain} ${rankND}<br><b>CO2 per capita</b>: ${CO2PerCapita2018} metric tons per capita ${rankPerCapital}<br><b>Total CO2 emissions</b>: ${CO2Total2018} metric tons ${rankTotal}</h4>`)
+          .setLngLat([longitude, latitude])
+          .addTo(map);
+
+      });
+    }
+  </script>
+</body>
+<div id="loading">
+  <img id="loading-image" src="./img/load.gif" alt="Loading..." />
+</div>
+
+</html>
