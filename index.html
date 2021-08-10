@@ -71,7 +71,7 @@
 
     mapboxgl.accessToken = 'pk.eyJ1IjoiaHVtZGF0YSIsImEiOiJja3M2aDQ5NjQwMm5lMm5ybTFybHA5bTJwIn0.0-jFK4yQkb-rnXiGo96oNA';
 
-    var map;
+    var map, zoom, minZoom;
     var popup;
 
     // status
@@ -82,26 +82,22 @@
 
 
     if (mobile) {
-
-      map = new mapboxgl.Map({
-        container: 'map', // container element id
-        style: 'mapbox://styles/humdata/cks6diles0smu17p36fcucx4s',
-        center: [9.168248, 11.987638], // initial map center in [lon, lat]
-        zoom: 2,
-        minZoom: 1
-      });
-
+      zoom = 2;
+      minZoom = 1;
     } else {
-
-      map = new mapboxgl.Map({
-        container: 'map', // container element id
-        style: 'mapbox://styles/humdata/cks6diles0smu17p36fcucx4s',
-        center: [9.168248, 11.987638], // initial map center in [lon, lat]
-        zoom: 2,
-        minZoom: 2
-      });
-
+      zoom = 2;
+      minZoom = 2;
     }
+
+    map = new mapboxgl.Map({
+      container: 'map', // container element id
+      style: 'mapbox://styles/humdata/cks6diles0smu17p36fcucx4s',
+      center: [9.168248, 11.987638], // initial map center in [lon, lat]
+      zoom: zoom,
+      minZoom: minZoom
+    });
+    map.scrollZoom.disable(); 
+    map.dragRotate.disable();
 
 
     function addCountryLayer() {

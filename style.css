@@ -39,7 +39,7 @@ body {
   min-width: 280px !important;
   font-family: 'Open Sans', sans-serif;
   text-align: left;
-  z-index: 20;
+  z-index: 26;
   border-radius: 10px;
 }
 .mapboxgl-popup-content {
