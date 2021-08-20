@@ -6,9 +6,7 @@
   <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
   <title>Climate change map</title>
   <link href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css' rel='stylesheet' type='text/css'>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600;1,700&display=swap"
-    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;900&display=swap" rel="stylesheet">
   <script src='https://api.mapbox.com/mapbox-gl-js/v1.6.0/mapbox-gl.js'></script>
   <link href='https://api.mapbox.com/mapbox-gl-js/v1.6.0/mapbox-gl.css' rel='stylesheet' />
   <link href="./style.css" rel="stylesheet">
@@ -154,17 +152,17 @@
             [
               "case",
               ["==", ["get", "ROMNAM"], 'Burkina Faso'],
-              3,
+              2,
               ["==", ["get", "ROMNAM"], 'Chad'],
-              3,
+              2,
               ["==", ["get", "ROMNAM"], 'Cameroon'],
-              3,
+              2,
               ["==", ["get", "ROMNAM"], 'Mali'],
-              3,
+              2,
               ["==", ["get", "ROMNAM"], 'Niger'],
-              3,
+              2,
               ["==", ["get", "ROMNAM"], 'Nigeria'],
-              3,
+              2,
               0.5
             ]
         }
@@ -364,7 +362,7 @@
         var income = e.features[0].properties.income;
 
 
-        var popupClass = "color1";
+        var popupClass = "";
 
         if (NDgain == 0 || NDgain == "") {
           NDgain = "NA";
@@ -378,6 +376,7 @@
           rankTotal = "";
         } else {
           CO2Total2018 = Math.round(CO2Total2018 * 10) / 10;
+          CO2Total2018 = String(CO2Total2018).replace(/(.)(?=(\d{3})+$)/g,'$1,');
           rankTotal = `(Rank ${rankTotal})`;
         }
 
@@ -424,7 +423,7 @@
         var rankND = e.features[0].properties.rankND;
         var income = e.features[0].properties.income;
 
-        var popupClass = "color1";
+        var popupClass = "";
 
         if (NDgain == 0 || NDgain == "") {
           NDgain = "NA";
