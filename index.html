@@ -408,9 +408,10 @@
 
       //mobile
 
+      //map.on('mouseleave', nameOfLayer,function() {    map.getCanvas().style.cursor = '';   popup.remove();  });
+
       map.on('touchstart', 'countriesfill', function (e) {
-
-
+        popup.remove();
         map.getCanvas().style.cursor = 'pointer';
         var country = e.features[0].properties.ROMNAM;
         var latitude = e.features[0].properties.latitude;
@@ -448,8 +449,6 @@
           rankPerCapital = `(Rank ${rankPerCapital})`;
         }
 
-
-
         if (country == "Taiwan" || country == "Western Sahara" || country == "Jammu and Kashmir" || country == "Aksai Chin" || country == "Abyei" || country == "French Guiana" || country == "Puerto Rico (USA)" || country == "Arunachal Pradesh" || country == "French Southern Territories" || country == "New Caledonia" || country == "Antarctica" || country == "Greenland" || country == "Svalbard and Jan Mayen Islands" || country == "South Georgia and the South Sandwich Islands" || country == "Falkland Islands (Malvinas)" || country == "") {
         } else {
           popup = new mapboxgl.Popup({
@@ -460,10 +459,7 @@
             .setHTML(`<h3 class="popupClass"><b>${country}</b></h3><h4><b>Climate readiness & vulnerability (ND-Gain Index)</b>: ${NDgain} ${rankND}<br><b>CO2 per capita</b>: ${CO2PerCapita2018} metric tons per capita ${rankPerCapital}<br><b>Total CO2 emissions</b>: ${CO2Total2018} metric tons ${rankTotal}</h4>`)
             .setLngLat([longitude, latitude])
             .addTo(map);
-
         }
-
-
       });
     }
   </script>
